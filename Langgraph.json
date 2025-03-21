@@ -1,0 +1,58 @@
+{
+  "name": "SimpleLangChainBot",
+  "description": "A basic chatbot using LangChain and LangGraph",
+  "dependencies": [
+    "langchain",
+    "langgraph",
+    "openai",
+    "chromadb"
+  ],
+  "env": {
+    "OPENAI_API_KEY": {
+      "required": true
+    }
+  },
+  "graphs": {
+    "chatbot_graph": {
+      "start": "start",
+      "nodes": {
+        "start": {
+          "type": "input",
+          "description": "User input goes here",
+          "next": "process_query"
+        },
+        "process_query": {
+          "type": "llm",
+          "model": "langchain.llms.openai:OpenAI",
+          "description": "Calls OpenAI GPT",
+          "parameters": {
+            "model_name": "gpt-3.5-turbo",
+            "temperature": 0.7,
+            "max_tokens": 500
+          },
+          "next": "store_memory"
+        },
+        "store_memory": {
+          "type": "memory",
+          "description": "Stores conversation history",
+          "parameters": {
+            "storage": "chroma",
+            "retrieval": "similarity",
+            "embedding_model": "langchain.embeddings.openai:OpenAIEmbeddings",
+            "model_name": "text-embedding-ada-002"
+          },
+          "next": "output"
+        },
+        "output": {
+          "type": "output",
+          "description": "Outputs the chatbot's response"
+        }
+      },
+      "edges": [
+        { "from": "start", "to": "process_query" },
+        { "from": "process_query", "to": "store_memory" },
+        { "from": "store_memory", "to": "output" }
+      ]
+    }
+  }
+}
